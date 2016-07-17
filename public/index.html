@@ -1,0 +1,266 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'/>
+    <title>Chat</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>  
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+        <script src="angular-cookies.js"></script>  
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script data-require="jquery@*" data-semver="2.1.1" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+</head>
+    
+<body ng-app="myApp">
+    <div ng-controller="repeatController">  
+        <div class="container" ng-hide="currentUser" style="padding-top:5%;">
+             <h3 class="text-center" >Herzlich Willkommen!</h3>
+
+            
+            <div class="col-md-4"></div>
+            <form class="col-md-4"><center><div class="form-group">
+                <label for="name">Bitte gib Deinen Name ein:</label>
+            <input id="name" type="text" ng-model="username" class="form-control"/></div>
+            <button class="btn btn-info" type="submit" ng-click="login(username);">Chat starten!</button></center></form>
+            <div class="col-md-4"></div>
+
+        </div>
+        
+        
+        <div ng-show="currentUser">
+
+        
+         <div class="container">
+<div class="row " style="padding-top:5%;">
+    <h3 class="text-center" >Viel Spaß beim Chatten!</h3>
+    <br /><br />
+    <div class="col-md-8">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                CHAT-VERLAUF
+            </div>
+            <div class="panel-body" style="overflow : auto; height : 60%;" schroll-bottom="messages">
+<ul class="media-list">
+
+                                    <li class="media" ng-repeat="message in messages" ng-class="{'text-right': message.name == currentUser}">
+
+                                        <div class="media-body" ng-hide="message.name=='Information'">
+
+                                            <div class="media">
+                                                <a class="pull-left" href="#">
+                                                    <!--<img class="media-object img-circle " src="assets/img/user.png" />-->
+                                                </a>
+                                                <div class="media-body" >
+                                                    {{message.text}}
+                                                    <br />
+                                                   <small class="text-muted">{{message.name}} | {{message.zeit | date:"hh:mm"}} Uhr</small>
+                                                    <hr />
+                                                </div>
+                                            </div>
+                                        </div>                                            
+                                        <div ng-show="message.name=='Information'"><div>{{message.name}}: {{message.text}}</div><hr/></div>
+
+                                    </li>
+    
+                                </ul>        
+
+            </div>
+            <div class="panel-footer">
+                <form><div class="input-group">
+                    
+                        <!--  <input id="name" type="text" placeholder="dein Name" ng-model="message.name"    />-->
+                        <input type="text" class="form-control" placeholder="Bitte Nachricht eingeben..." ng-model="message.text"/>
+                        <span class="input-group-btn"><button class="btn btn-info" type="submit" ng-click="senden(message); message.text='';" ng-disabled="!message.text">SEND</button></span>
+                 </div></form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+               ZUR ZEIT ONLINE
+            </div>
+            <div class="panel-body" style="overflow : auto; height : 40%;">
+                <ul class="media-list">
+
+                                    <li class="media" ng-repeat="client in clients | filter:{room:currentRoom}">
+
+                                        <div class="media-body">
+
+                                            <div class="media">
+                                                <a class="pull-left" href="#">
+                                                    <img class="media-object img-circle" style="max-height:40px;" src="assets/img/user.png" />
+                                                </a>
+                                                <div class="media-body" >
+                                                    <h5>{{client.username}} | User </h5>
+                                                    
+                                                   <small class="text-muted">Active From 3 hours</small>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </li>
+                                </ul>
+                </div>
+            </div>
+        
+    </div>
+    
+    
+        <div class="col-md-4">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+               CHATROOMS
+            </div>
+            <div class="panel-body" style="overflow : auto; height : 20%;">
+                <ul class="media-list">
+
+                                    <li class="media" ng-repeat="room in rooms">
+
+                                        <div class="media-body">
+
+                                            <div class="media">
+                                                <div class="media-body" >
+                                                                    <span ng-if="room==currentRoom"><b>{{room}}</b></span>
+                <span style="cursor: pointer; " ng-if="room!=currentRoom" ng-click="switchRoom(room)">{{room}}</span>
+                (<span ng-show="(clients | filter:{room:room}).length>0">{{(clients | filter:{room:room}).length}} User online</span><span ng-hide="(clients | filter:{room:room}).length>0">leer</span>)
+            <button type="button" ng-show="currentUser=='Pascal'" class="btn btn-default  pull-right" ng-click="deleteRoom(room)"><span class="glyphicon glyphicon-trash"></span></button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </li>
+                                </ul>
+                
+                
+                    
+                    <form ng-show="currentUser=='Pascal'"><div class="input-group">
+                        <!--  <input id="name" type="text" placeholder="dein Name" ng-model="message.name"    />-->
+                        <input type="text" class="form-control" placeholder="Neuen Raum erstellen..." ng-model="roomname"/>
+                        <span class="input-group-btn"><button class="btn btn-info" type="submit" ng-click="newRoom(roomname); ownRoom=true;roomname='';" ng-disabled="!roomname">SEND</button></span>
+                 </div></form>
+                
+                
+                
+                </div>
+            </div>
+        
+    </div>
+    
+
+    
+</div>
+             
+
+
+        
+  </div>
+        
+       </div> 
+    </div>
+</body>
+
+<script>
+    var myApp = angular.module('myApp', ['ngCookies']);
+    myApp.controller('repeatController', function($scope, $location, $cookies) {
+                var socket = io.connect();
+        
+       
+        
+        var cookie = $cookies.get('username');
+        if(cookie) {
+            socket.emit('adduser', cookie);
+            $scope.currentUser = cookie;
+        }
+        
+        
+        $scope.login = function (username) {
+                socket.emit('adduser', username);
+                $scope.currentUser = username;
+                $cookies.put('username', username);
+
+        };
+
+        	// on connection to server, ask for user's name with an anonymous callback
+            //socket.on('connect', function(){
+                // call the server-side function 'adduser' and send one parameter (value of prompt)
+            //    socket.emit('adduser', prompt("What's your name?"));
+            //});
+    
+        $scope.messages = [];
+    
+        $scope.senden = function (message) {
+            socket.emit('sendchat', message);
+        };
+
+        $scope.switchRoom = function (room) {
+		  socket.emit('switchRoom', room);
+        };
+        
+        $scope.newRoom = function (roomname) {
+		  socket.emit('newRoom', roomname);
+        };
+        
+        $scope.deleteRoom = function (roomname) {
+		  socket.emit('deleteRoom', roomname);
+        };
+
+        // listener, whenever the server emits 'updatechat', this updates the chat body
+        //Funktion falls Client Nachricht vom Server erhält
+        socket.on('updatechat', function (data) {
+            var zeit = new Date(data.zeit); //Front-End-Zeit zur Nachricht hinzufügen
+
+            $scope.messages.push(data); //Nachricht in den Front-End-Array
+            $scope.$apply(); //da "außerhalb" vom eigentlichen Controller!            
+        });
+        
+        
+        // listener, whenever the server emits 'updaterooms', this updates the room the client is in
+        socket.on('updaterooms', function(rooms, current_room) {
+                $scope.currentRoom = current_room;
+                $scope.rooms = rooms;
+                $scope.$apply();
+        });
+        
+                socket.on('updateusers', function(data) {
+                $scope.clients = data;
+                $scope.$apply();
+
+        });
+        
+        socket.on('newRoom', function(roomname) {
+                $scope.rooms.push(roomname);
+                $scope.$apply();
+        });   
+        
+        socket.on('deleteRoom', function(roomname) {
+        for(var i = 0; i < $scope.rooms.length; i++) {
+            if ($scope.rooms[i] == roomname) $scope.rooms.splice(i,1);
+        }
+                        $scope.$apply();
+
+        });
+
+    
+});
+    
+    
+    
+    myApp.directive('schrollBottom', function () {
+  return {
+    scope: {
+      schrollBottom: "="
+    },
+    link: function (scope, element) {
+      scope.$watchCollection('schrollBottom', function (newValue) {
+        if (newValue)
+        {
+          $(element).scrollTop($(element)[0].scrollHeight);
+        }
+      });
+    }
+  }
+})
+</script>
+</html>

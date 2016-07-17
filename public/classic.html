@@ -1,0 +1,73 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example - example-ngRepeat-production</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>  
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+    
+<body ng-app="myApp">
+    <div ng-controller="repeatController">   
+            <div ng-repeat="room in rooms">
+                <span ng-if="room==currentRoom"><b>{{room}}</b></span>
+                <span style="cursor: pointer; " ng-if="room!=currentRoom" ng-click="switchRoom(room)">{{room}}</span>
+            </div>
+            <div ng-repeat="message in messages">
+                [{{message.zeit | date:"hh:mm"}} Uhr] <b>{{message.name}}</b>: {{message.text}}
+            </div>
+        <form>
+      <!--  <input id="name" type="text" placeholder="dein Name" ng-model="message.name"    />-->
+        <input id="text" type="text" placeholder="schreibe etwas..." ng-model="message.text"/>
+        <input id="senden" type="submit" ng-click="senden(message); message.text='';" />
+        </form>
+        <a id="bottom"></a>    
+    </div>
+</body>
+
+<script>
+    var myApp = angular.module('myApp', []);
+    myApp.controller('repeatController', function($scope, $location, $anchorScroll) {
+                var socket = io.connect();
+
+        	// on connection to server, ask for user's name with an anonymous callback
+            socket.on('connect', function(){
+                // call the server-side function 'adduser' and send one parameter (value of prompt)
+                socket.emit('adduser', prompt("What's your name?"));
+            });
+    
+        $scope.messages = [];
+    
+        $scope.senden = function (message) {
+            socket.emit('sendchat', message);
+        };
+
+        $scope.switchRoom = function (room) {
+		  socket.emit('switchRoom', room);
+        };
+        
+
+        // listener, whenever the server emits 'updatechat', this updates the chat body
+        //Funktion falls Client Nachricht vom Server erhält
+        socket.on('updatechat', function (data) {
+            var zeit = new Date(data.zeit); //Front-End-Zeit zur Nachricht hinzufügen
+
+            $scope.messages.push(data); //Nachricht in den Front-End-Array
+            $scope.$apply(); //da "außerhalb" vom eigentlichen Controller!
+            
+            $location.hash('bottom'); //nach unten scrollen
+            $anchorScroll();
+        });
+        
+        
+        // listener, whenever the server emits 'updaterooms', this updates the room the client is in
+        socket.on('updaterooms', function(rooms, current_room) {
+                $scope.currentRoom = current_room;
+                $scope.rooms = rooms;
+                $scope.$apply();
+        });
+
+    
+});
+</script>
+</html>
