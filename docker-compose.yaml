@@ -2,8 +2,6 @@ version: '2'
 services:
   my_application:
     build: .
-    links:
-      - my_db:tasksdb
     ports:
       - "8080"
     restart: always
