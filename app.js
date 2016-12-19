@@ -26,7 +26,7 @@ var usernames = {};
 var clients = [];
 
 // rooms which are currently available in chat
-var rooms = ['Willkommenshalle','Plauderecke','Spielzimmer'];
+var rooms = ['Welcome-Room','Plauderecke','Games'];
 
 io.sockets.on('connection', function (socket) {
 
@@ -48,20 +48,20 @@ socket.on('deleteRoom', function (roomname) {
 		// store the username in the socket session for this client
 		socket.username = username;
 		// store the room name in the socket session for this client
-		socket.room = 'Willkommenshalle';
+		socket.room = 'Welcome-Room';
 		// add the client's username to the global list
 		usernames[username] = username;
-        clients.push({username:username, room: "Willkommenshalle"});
+        clients.push({username:username, room: "Welcome-Room"});
         io.sockets.emit('updateusers', clients);
 
         
 		// send client to room 1
-		socket.join('Willkommenshalle');
+		socket.join('Welcome-Room');
 		// echo to client they've connected
 		socket.emit('updatechat', { zeit: new Date().getTime(), name:'Information', text: 'Du bist nun mit dem Server verbunden!' });
 		// echo to room 1 that a person has connected to their room
-		socket.broadcast.to('Willkommenshalle').emit('updatechat', { zeit: new Date().getTime(), name:'Information', text: username+' ist dem Chat beigetreten!' });
-		socket.emit('updaterooms', rooms, 'Willkommenshalle');
+		socket.broadcast.to('Welcome-Room').emit('updatechat', { zeit: new Date().getTime(), name:'Information', text: username+' ist dem Chat beigetreten!' });
+		socket.emit('updaterooms', rooms, 'Welcome-Room');
 	});
 	
     
